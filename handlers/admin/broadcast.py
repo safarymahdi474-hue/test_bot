@@ -96,7 +96,7 @@ def build_broadcast_conversation() -> ConversationHandler:
                 CallbackQueryHandler(cancel_broadcast, pattern=r"^bc:cancel$"),
             ],
         },
-        fallbacks=[],
+        fallbacks=[CallbackQueryHandler(start_broadcast, pattern=r"^admin:broadcast$")],
         name="admin_broadcast_conversation",
         persistent=False,
     )

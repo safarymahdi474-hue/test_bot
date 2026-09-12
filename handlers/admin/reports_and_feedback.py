@@ -206,7 +206,7 @@ def build_book_request_conversation() -> ConversationHandler:
             AWAITING_REJECT_REASON: [MessageHandler(filters.TEXT & ~filters.COMMAND, receive_reject_reason)],
             AWAITING_CUSTOM_REPLY: [MessageHandler(filters.TEXT & ~filters.COMMAND, receive_custom_reply)],
         },
-        fallbacks=[],
+        fallbacks=[CallbackQueryHandler(view_book_request, pattern=r"^admin:book_req:")],
         name="admin_book_request_conversation",
         persistent=False,
     )
@@ -218,7 +218,7 @@ def build_feedback_reply_conversation() -> ConversationHandler:
         states={
             AWAITING_FEEDBACK_REPLY: [MessageHandler(filters.TEXT & ~filters.COMMAND, receive_feedback_reply)],
         },
-        fallbacks=[],
+        fallbacks=[CallbackQueryHandler(view_feedback_item, pattern=r"^admin:fb_view:")],
         name="admin_feedback_reply_conversation",
         persistent=False,
     )

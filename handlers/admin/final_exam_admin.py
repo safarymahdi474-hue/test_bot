@@ -135,7 +135,7 @@ def build_add_final_exam_conversation() -> ConversationHandler:
             AWAITING_TITLE: [MessageHandler(filters.TEXT & ~filters.COMMAND, receive_title)],
             AWAITING_FILE: [MessageHandler(filters.Document.ALL, receive_file)],
         },
-        fallbacks=[],
+        fallbacks=[CallbackQueryHandler(start_add, pattern=r"^admin:add_fexam$")],
         name="admin_add_final_exam_conversation",
         persistent=False,
     )

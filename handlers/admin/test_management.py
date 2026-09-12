@@ -388,7 +388,7 @@ def build_add_book_conversation() -> ConversationHandler:
     return ConversationHandler(
         entry_points=[CallbackQueryHandler(ask_book_line, pattern=r"^admin:add_book$")],
         states={AWAITING_BOOK_LINE: [MessageHandler(filters.TEXT & ~filters.COMMAND, receive_book_line)]},
-        fallbacks=[],
+        fallbacks=[CallbackQueryHandler(ask_book_line, pattern=r"^admin:add_book$")],
         name="admin_add_book_conversation",
         persistent=False,
     )
@@ -412,7 +412,7 @@ def build_add_test_conversation() -> ConversationHandler:
                 MessageHandler(filters.PHOTO | filters.Document.ALL, receive_explanation_image)
             ],
         },
-        fallbacks=[],
+        fallbacks=[CallbackQueryHandler(start_add_test, pattern=r"^admin:add_test$")],
         name="admin_add_test_conversation",
         persistent=False,
     )
@@ -423,7 +423,7 @@ def build_excel_upload_conversation() -> ConversationHandler:
     return ConversationHandler(
         entry_points=[CallbackQueryHandler(ask_bulk_upload, pattern=r"^admin:upload_bulk$")],
         states={AWAITING_BULK_ZIP: [MessageHandler(filters.Document.ALL, receive_bulk_zip)]},
-        fallbacks=[],
+        fallbacks=[CallbackQueryHandler(ask_bulk_upload, pattern=r"^admin:upload_bulk$")],
         name="admin_bulk_upload_conversation",
         persistent=False,
     )

@@ -97,7 +97,7 @@ def build_add_channel_conversation() -> ConversationHandler:
     return ConversationHandler(
         entry_points=[CallbackQueryHandler(ask_add_channel, pattern=r"^admin:add_channel$")],
         states={AWAITING_ADD_LINE: [MessageHandler(filters.TEXT & ~filters.COMMAND, receive_add_channel)]},
-        fallbacks=[],
+        fallbacks=[CallbackQueryHandler(ask_add_channel, pattern=r"^admin:add_channel$")],
         name="admin_add_channel_conversation",
         persistent=False,
     )

@@ -298,6 +298,7 @@ def build_question_reports_conversation() -> ConversationHandler:
             ],
         },
         fallbacks=[
+            CallbackQueryHandler(entry_reports, pattern=r"^admin:question_reports$"),
             CallbackQueryHandler(paginate, pattern=r"^qrep:page:"),
             CallbackQueryHandler(notify_reporters, pattern=r"^qrep:notify:"),
         ],

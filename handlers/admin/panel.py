@@ -152,7 +152,7 @@ def build_user_search_conversation() -> ConversationHandler:
         states={
             AWAITING_SEARCH: [MessageHandler(filters.TEXT & ~filters.COMMAND, receive_search_query)],
         },
-        fallbacks=[],
+        fallbacks=[CallbackQueryHandler(ask_search_query, pattern=r"^admin:users_search$")],
         name="admin_user_search_conversation",
         persistent=False,
     )

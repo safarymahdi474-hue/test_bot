@@ -67,7 +67,7 @@ def build_news_settings_conversation() -> ConversationHandler:
         states={
             AWAITING_INPUT: [MessageHandler(filters.TEXT & ~filters.COMMAND, receive_input)],
         },
-        fallbacks=[],
+        fallbacks=[CallbackQueryHandler(entry_news_settings, pattern=r"^admin:news_settings$")],
         name="admin_news_settings_conversation",
         persistent=False,
     )
