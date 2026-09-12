@@ -69,7 +69,7 @@ async def select_subject(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     rows = [[InlineKeyboardButton(f"📄 {e['title']}", callback_data=f"{PREFIX}:dl:{e['id']}")]
             for e in exams]
     await query.edit_message_text(
-        f"📝 امتحان‌های نهایی {subject} {ud['grade']}:", reply_markup=with_back(rows)
+        f"📝 امتحان‌های نهایی {subject} {ud['grade']}:", reply_markup=with_back(rows, callback_data=f"{PREFIX}:back")
     )
     return SEL_SUBJECT
 
@@ -113,22 +113,22 @@ def build_final_exam_conversation() -> ConversationHandler:
             SEL_GRADE: [
                 CallbackQueryHandler(select_grade, pattern=f"^{PREFIX}:grade:"),
                 CallbackQueryHandler(exit_to_main_menu, pattern=r"^menu:main$"),
-                CallbackQueryHandler(exit_to_main_menu, pattern=r"^back$"),
+                CallbackQueryHandler(exit_to_main_menu, pattern=f"^{PREFIX}:back$"),
             ],
             SEL_MAJOR: [
                 CallbackQueryHandler(select_major, pattern=f"^{PREFIX}:major:"),
                 CallbackQueryHandler(exit_to_main_menu, pattern=r"^menu:main$"),
-                CallbackQueryHandler(go_back_to_grades, pattern=r"^back$"),
+                CallbackQueryHandler(go_back_to_grades, pattern=f"^{PREFIX}:back$"),
             ],
             SEL_SUBJECT: [
                 CallbackQueryHandler(select_subject, pattern=f"^{PREFIX}:subject:"),
                 CallbackQueryHandler(download_exam, pattern=f"^{PREFIX}:dl:"),
                 CallbackQueryHandler(exit_to_main_menu, pattern=r"^menu:main$"),
-                CallbackQueryHandler(go_back_to_grades, pattern=r"^back$"),
+                CallbackQueryHandler(go_back_to_grades, pattern=f"^{PREFIX}:back$"),
             ],
         },
         fallbacks=[
-            CallbackQueryHandler(go_back_to_grades, pattern=r"^back$"),
+            CallbackQueryHandler(go_back_to_grades, pattern=f"^{PREFIX}:back$"),
             CallbackQueryHandler(entry_final_exam, pattern=r"^menu:final_exam$"),
         ],
         name="final_exam_conversation",
