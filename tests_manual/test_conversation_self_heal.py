@@ -102,3 +102,33 @@ if failures:
     raise SystemExit(1)
 
 print("\n###### ALL CONVERSATIONS HAVE SELF-HEAL FALLBACKS ######")
+
+# ============================================================
+# بررسی دوم: هیچ دو مکالمه‌ی مستقلی نباید یه callback_data پیشوندنشده
+# (مثل یه "back" ثابت) رو مشترک داشته باشن، وگرنه هر کدوم که توی صف
+# handlerها زودتر باشه و state باقی‌مونده داشته باشه، کلیک اون یکی رو می‌قاپه.
+# ============================================================
+print("\n--- بررسی تداخل الگوهای callback بین مکالمه‌های مختلف ---")
+
+pattern_owners: dict[str, list[str]] = {}
+for name, conv in CONVERSATIONS:
+    all_handlers = list(conv.entry_points) + list(conv.fallbacks)
+    for state_handlers in (conv.states or {}).values():
+        all_handlers.extend(state_handlers)
+    for p in _callback_patterns(all_handlers):
+        pattern_owners.setdefault(p, []).append(name)
+
+collisions = {p: owners for p, owners in pattern_owners.items()
+              if len(set(owners)) > 1 and p != r"^menu:main$"}
+# نکته: "^menu:main$" عمداً تو چند مکالمه تکرار شده. چون همیشه توسط
+# main_menu_router_handler (که زودتر از همه ثبت می‌شه) گرفته می‌شه، این
+# نسخه‌های داخلی هرگز واقعاً اجرا نمی‌شن؛ فقط برای این نگه داشته شدن که اگه
+# یه‌جا ترتیب ثبت handlerها عوض شد، state داخلیِ همون مکالمه هم درست پاک بشه.
+# چون خروجی‌شون همیشه یکسانه (نمایش منو + پایان مکالمه)، اشتراکش بی‌خطره.
+if collisions:
+    print("❌ الگوهای callback مشترک بین چند مکالمه‌ی مستقل:")
+    for p, owners in collisions.items():
+        print(f"   {p}: {sorted(set(owners))}")
+    raise SystemExit(1)
+
+print("###### NO CROSS-CONVERSATION CALLBACK PATTERN COLLISIONS ######")
