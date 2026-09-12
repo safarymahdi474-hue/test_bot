@@ -275,7 +275,11 @@ def build_registration_conversation() -> ConversationHandler:
                 CallbackQueryHandler(edit_choice, pattern=r"^reg:edit_"),
             ],
         },
-        fallbacks=[CommandHandler("cancel", cancel_registration)],
+        fallbacks=[
+            CommandHandler("cancel", cancel_registration),
+            # اگه ثبت‌نام قبلاً یه‌جایی گیر کرده باشه، /start دوباره باید از نو کار کنه
+            CommandHandler("start", start_command),
+        ],
         name="registration_conversation",
         persistent=False,
     )

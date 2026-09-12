@@ -127,7 +127,10 @@ def build_final_exam_conversation() -> ConversationHandler:
                 CallbackQueryHandler(go_back_to_grades, pattern=r"^back$"),
             ],
         },
-        fallbacks=[CallbackQueryHandler(go_back_to_grades, pattern=r"^back$")],
+        fallbacks=[
+            CallbackQueryHandler(go_back_to_grades, pattern=r"^back$"),
+            CallbackQueryHandler(entry_final_exam, pattern=r"^menu:final_exam$"),
+        ],
         name="final_exam_conversation",
         persistent=False,
     )

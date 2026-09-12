@@ -430,7 +430,16 @@ def build_practice_conversation() -> ConversationHandler:
             REPORT_TYPE: [CallbackQueryHandler(select_report_type, pattern=r"^rep:type:")],
             REPORT_DESC: [MessageHandler(filters.TEXT & ~filters.COMMAND, receive_report_desc)],
         },
-        fallbacks=[CallbackQueryHandler(entry_practice, pattern=r"^back$")],
+        fallbacks=[
+            CallbackQueryHandler(entry_practice, pattern=r"^back$"),
+            # اگه کاربر وسط یه مرحله گیر کرده باشه (مثلاً با /start یا منوی اصلی
+            # خارج شده و این ConversationHandler هنوز state قدیمیش رو نگه داشته)،
+            # کلیک دوباره روی همین دکمه‌های ورودی باید از نو شروع کنه، نه اینکه
+            # بی‌صدا نادیده گرفته بشه. برای همین همون entry_points رو این‌جا هم می‌ذاریم.
+            CallbackQueryHandler(entry_practice, pattern=r"^menu:practice$"),
+            CallbackQueryHandler(resume_exam, pattern=f"^{PREFIX}:resume:"),
+            CallbackQueryHandler(restart_exam, pattern=f"^{PREFIX}:restart$"),
+        ],
         name="practice_conversation",
         persistent=False,
         map_to_parent={ConversationHandler.END: ConversationHandler.END},

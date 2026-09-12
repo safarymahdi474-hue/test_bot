@@ -214,7 +214,7 @@ def build_feedback_conversation() -> ConversationHandler:
         states={
             AWAITING_FEEDBACK: [MessageHandler(filters.TEXT & ~filters.COMMAND, receive_feedback)],
         },
-        fallbacks=[],
+        fallbacks=[CallbackQueryHandler(show_feedback, pattern=r"^profile:feedback$")],
         name="feedback_conversation",
         persistent=False,
     )

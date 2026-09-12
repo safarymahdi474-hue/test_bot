@@ -154,7 +154,12 @@ def build_library_conversation() -> ConversationHandler:
                 CallbackQueryHandler(go_to_grades, pattern=r"^back$"),
             ],
         },
-        fallbacks=[CallbackQueryHandler(go_to_grades, pattern=r"^back$")],
+        fallbacks=[
+            CallbackQueryHandler(go_to_grades, pattern=r"^back$"),
+            # اگه این مکالمه قبلاً یه‌جایی گیر کرده باشه (state قدیمی مونده)،
+            # کلیک دوباره روی «📚 کتابخانه» باید از نو بازش کنه، نه بی‌صدا هیچی نشه.
+            CallbackQueryHandler(entry_library, pattern=r"^menu:library$"),
+        ],
         name="library_conversation",
         persistent=False,
     )
