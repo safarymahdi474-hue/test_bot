@@ -25,27 +25,41 @@ def with_back(rows: list[list[InlineKeyboardButton]],
 
 
 # ==================== انتخاب پایه / رشته / درس / کتاب ====================
+# نکته‌ی مهم: دکمه‌ی «بازگشت» این کیبوردها به‌جای callback_data ثابت "back"،
+# پیش‌فرض f"{prefix}:back" می‌گیره. اگه چند مکالمه‌ی مستقل (تمرین، کتابخانه،
+# امتحان نهایی، ...) همه از یه callback_data یکسان مثل "back" استفاده کنن،
+# وقتی کاربر توی یکی از اون‌ها state قدیمی/گیرکرده داشته باشه، همون مکالمه
+# کلیک "بازگشت" مکالمه‌ی دیگه رو هم می‌قاپه (چون توی صف بررسی handlerها
+# زودتره). پیشوند دار کردن این مشکل رو کاملاً حذف می‌کنه.
 
-def grades_keyboard(prefix: str, with_back_button: bool = True) -> InlineKeyboardMarkup:
+def grades_keyboard(prefix: str, with_back_button: bool = True,
+                     back_callback_data: str | None = None) -> InlineKeyboardMarkup:
     rows = [[InlineKeyboardButton(g, callback_data=f"{prefix}:grade:{g}")] for g in GRADES]
-    return with_back(rows) if with_back_button else InlineKeyboardMarkup(rows)
+    if not with_back_button:
+        return InlineKeyboardMarkup(rows)
+    return with_back(rows, callback_data=back_callback_data or f"{prefix}:back")
 
 
-def majors_keyboard(prefix: str, with_back_button: bool = True) -> InlineKeyboardMarkup:
+def majors_keyboard(prefix: str, with_back_button: bool = True,
+                     back_callback_data: str | None = None) -> InlineKeyboardMarkup:
     rows = [[InlineKeyboardButton(m, callback_data=f"{prefix}:major:{m}")] for m in MAJORS]
-    return with_back(rows) if with_back_button else InlineKeyboardMarkup(rows)
+    if not with_back_button:
+        return InlineKeyboardMarkup(rows)
+    return with_back(rows, callback_data=back_callback_data or f"{prefix}:back")
 
 
-def subjects_keyboard(prefix: str, major: str) -> InlineKeyboardMarkup:
+def subjects_keyboard(prefix: str, major: str,
+                       back_callback_data: str | None = None) -> InlineKeyboardMarkup:
     subjects = SUBJECTS_BY_MAJOR.get(major, [])
     rows = [[InlineKeyboardButton(s, callback_data=f"{prefix}:subject:{s}")] for s in subjects]
-    return with_back(rows)
+    return with_back(rows, callback_data=back_callback_data or f"{prefix}:back")
 
 
-def test_book_publishers_keyboard(prefix: str, available_names: list[str] | None = None) -> InlineKeyboardMarkup:
+def test_book_publishers_keyboard(prefix: str, available_names: list[str] | None = None,
+                                   back_callback_data: str | None = None) -> InlineKeyboardMarkup:
     names = available_names if available_names is not None else TEST_BOOK_PUBLISHERS
     rows = [[InlineKeyboardButton(n, callback_data=f"{prefix}:book:{n}")] for n in names]
-    return with_back(rows)
+    return with_back(rows, callback_data=back_callback_data or f"{prefix}:back")
 
 
 def confirm_keyboard(yes_data: str, no_data: str,
