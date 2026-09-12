@@ -131,11 +131,19 @@ def build_add_final_exam_conversation() -> ConversationHandler:
         states={
             SEL_GRADE: [CallbackQueryHandler(select_grade, pattern=f"^{PREFIX}:grade:")],
             SEL_MAJOR: [CallbackQueryHandler(select_major, pattern=f"^{PREFIX}:major:")],
-            SEL_SUBJECT: [CallbackQueryHandler(select_subject, pattern=f"^{PREFIX}:subject:")],
+            SEL_SUBJECT: [
+                CallbackQueryHandler(select_subject, pattern=f"^{PREFIX}:subject:"),
+                # دکمه‌ی «بازگشت» زیر لیست درس‌ها (از subjects_keyboard)؛ چون این یه
+                # فرم کوتاهه، برگشت یعنی از اول شروع کن
+                CallbackQueryHandler(start_add, pattern=f"^{PREFIX}:back$"),
+            ],
             AWAITING_TITLE: [MessageHandler(filters.TEXT & ~filters.COMMAND, receive_title)],
             AWAITING_FILE: [MessageHandler(filters.Document.ALL, receive_file)],
         },
-        fallbacks=[CallbackQueryHandler(start_add, pattern=r"^admin:add_fexam$")],
+        fallbacks=[
+            CallbackQueryHandler(start_add, pattern=r"^admin:add_fexam$"),
+            CallbackQueryHandler(start_add, pattern=f"^{PREFIX}:back$"),
+        ],
         name="admin_add_final_exam_conversation",
         persistent=False,
     )
