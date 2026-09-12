@@ -67,7 +67,7 @@ async def _show_subjects(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     subjects = SUBJECTS_BY_MAJOR.get(ud["major"], [])
     rows = [[InlineKeyboardButton(s, callback_data=f"{PREFIX}:subj:{s}")] for s in subjects]
     await query.edit_message_text(
-        f"📚 کتاب‌های {ud['grade']} {ud['major']}:", reply_markup=with_back(rows)
+        f"📚 کتاب‌های {ud['grade']} {ud['major']}:", reply_markup=with_back(rows, callback_data=f"{PREFIX}:back")
     )
     return SEL_SUBJECT
 
@@ -151,11 +151,11 @@ def build_library_conversation() -> ConversationHandler:
                 CallbackQueryHandler(report_missing_book, pattern=f"^{PREFIX}:report$"),
                 CallbackQueryHandler(back_to_subjects, pattern=f"^{PREFIX}:back_subj$"),
                 CallbackQueryHandler(exit_to_main_menu, pattern=r"^menu:main$"),
-                CallbackQueryHandler(go_to_grades, pattern=r"^back$"),
+                CallbackQueryHandler(go_to_grades, pattern=f"^{PREFIX}:back$"),
             ],
         },
         fallbacks=[
-            CallbackQueryHandler(go_to_grades, pattern=r"^back$"),
+            CallbackQueryHandler(go_to_grades, pattern=f"^{PREFIX}:back$"),
             # اگه این مکالمه قبلاً یه‌جایی گیر کرده باشه (state قدیمی مونده)،
             # کلیک دوباره روی «📚 کتابخانه» باید از نو بازش کنه، نه بی‌صدا هیچی نشه.
             CallbackQueryHandler(entry_library, pattern=r"^menu:library$"),
