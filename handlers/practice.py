@@ -80,7 +80,7 @@ async def select_subject(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     rows = [[InlineKeyboardButton(b["name"], callback_data=f"{PREFIX}:tbook:{b['id']}")]
             for b in books]
     await query.edit_message_text(
-        "📖 کتاب تستت رو انتخاب کن:", reply_markup=with_back(rows)
+        "📖 کتاب تستت رو انتخاب کن:", reply_markup=with_back(rows, callback_data=f"{PREFIX}:back")
     )
     return SEL_BOOK
 
@@ -101,7 +101,7 @@ async def select_book(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
     rows = [[InlineKeyboardButton(ch["name"], callback_data=f"{PREFIX}:chap:{ch['id']}")]
             for ch in chapters]
     await query.edit_message_text(
-        f"📚 فصل‌های {book['name']} — {ud['subject']}:", reply_markup=with_back(rows)
+        f"📚 فصل‌های {book['name']} — {ud['subject']}:", reply_markup=with_back(rows, callback_data=f"{PREFIX}:back")
     )
     return SEL_CHAPTER
 
@@ -125,7 +125,7 @@ async def select_chapter(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         f"📝 فصل {chapter['name']}\n"
         f"تست‌های این فصل: {bounds[0]} تا {bounds[1]}\n\n"
         "از کدوم تا کدوم بزنی؟\n(مثال: {}-{})".format(bounds[0], bounds[1]),
-        reply_markup=with_back(rows),
+        reply_markup=with_back(rows, callback_data=f"{PREFIX}:back"),
     )
     return SEL_RANGE
 
@@ -155,7 +155,7 @@ async def _ask_mode(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         [InlineKeyboardButton("📖 آزاد", callback_data=f"{PREFIX}:mode:free")],
     ]
     text = "⏱ حالت آزمون:"
-    markup = with_back(rows)
+    markup = with_back(rows, callback_data=f"{PREFIX}:back")
     if update.callback_query:
         await update.callback_query.edit_message_text(text, reply_markup=markup)
     else:
@@ -180,7 +180,7 @@ async def select_mode(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
         f"📝 تست {ud['start']} تا {ud['end']}\n"
     )
     rows = [[InlineKeyboardButton("🚀 شروع آزمون", callback_data=f"{PREFIX}:launch")]]
-    await query.edit_message_text(text, reply_markup=with_back(rows))
+    await query.edit_message_text(text, reply_markup=with_back(rows, callback_data=f"{PREFIX}:back"))
     return PRE_START
 
 
@@ -431,7 +431,7 @@ def build_practice_conversation() -> ConversationHandler:
             REPORT_DESC: [MessageHandler(filters.TEXT & ~filters.COMMAND, receive_report_desc)],
         },
         fallbacks=[
-            CallbackQueryHandler(entry_practice, pattern=r"^back$"),
+            CallbackQueryHandler(entry_practice, pattern=f"^{PREFIX}:back$"),
             # اگه کاربر وسط یه مرحله گیر کرده باشه (مثلاً با /start یا منوی اصلی
             # خارج شده و این ConversationHandler هنوز state قدیمیش رو نگه داشته)،
             # کلیک دوباره روی همین دکمه‌های ورودی باید از نو شروع کنه، نه اینکه
