@@ -31,7 +31,11 @@ async def select_grade(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
     await query.answer()
     grade = query.data.split(":", 2)[2]
     _ud(context)["grade"] = grade
-    await query.edit_message_text(
+    return await _render_majors(update, context)
+
+
+async def _render_majors(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    await update.callback_query.edit_message_text(
         "رشته‌ت رو انتخاب کن:", reply_markup=majors_keyboard(PREFIX)
     )
     return SEL_MAJOR
@@ -48,6 +52,11 @@ async def select_major(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
         reply_markup=subjects_keyboard(PREFIX, major),
     )
     return SEL_SUBJECT
+
+
+async def back_to_major(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    await update.callback_query.answer()
+    return await _render_majors(update, context)
 
 
 async def select_subject(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -124,7 +133,7 @@ def build_final_exam_conversation() -> ConversationHandler:
                 CallbackQueryHandler(select_subject, pattern=f"^{PREFIX}:subject:"),
                 CallbackQueryHandler(download_exam, pattern=f"^{PREFIX}:dl:"),
                 CallbackQueryHandler(exit_to_main_menu, pattern=r"^menu:main$"),
-                CallbackQueryHandler(go_back_to_grades, pattern=f"^{PREFIX}:back$"),
+                CallbackQueryHandler(back_to_major, pattern=f"^{PREFIX}:back$"),
             ],
         },
         fallbacks=[
