@@ -39,13 +39,32 @@ async def exit_to_main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     return ConversationHandler.END
 
 
-async def go_to_grades(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    query = update.callback_query
-    await query.answer()
-    await query.edit_message_text(
+async def _render_grades(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    await update.callback_query.edit_message_text(
         "📚 کتاب‌ها بر اساس پایه:", reply_markup=grades_keyboard(PREFIX)
     )
     return SEL_GRADE
+
+
+async def go_to_grades(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    await update.callback_query.answer()
+    return await _render_grades(update, context)
+
+
+async def back_to_intro(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """دکمه‌ی «بازگشت» توی صفحه‌ی انتخاب پایه؛ چون این اولین قدمه، برمی‌گرده
+    به صفحه‌ی معرفی کتابخونه (نه اینکه دوباره همون صفحه رو نشون بده -
+    که تلگرام edit با متن/دکمه‌ی یکسان رو خطا می‌ده)."""
+    return await entry_library(update, context)
+
+
+async def _show_majors(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    ud = _ud(context)
+    await update.callback_query.edit_message_text(
+        f"📚 کتاب‌های {ud['grade']}\n\nرشته‌ت رو انتخاب کن:",
+        reply_markup=majors_keyboard(PREFIX),
+    )
+    return SEL_MAJOR
 
 
 async def select_grade(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -53,11 +72,7 @@ async def select_grade(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
     await query.answer()
     grade = query.data.split(":", 2)[2]
     _ud(context)["grade"] = grade
-    await query.edit_message_text(
-        f"📚 کتاب‌های {grade}\n\nرشته‌ت رو انتخاب کن:",
-        reply_markup=majors_keyboard(PREFIX),
-    )
-    return SEL_MAJOR
+    return await _show_majors(update, context)
 
 
 async def _show_subjects(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -78,6 +93,11 @@ async def select_major(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
     major = query.data.split(":", 2)[2]
     _ud(context)["major"] = major
     return await _show_subjects(update, context)
+
+
+async def back_to_majors(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    await update.callback_query.answer()
+    return await _show_majors(update, context)
 
 
 async def back_to_subjects(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -141,17 +161,19 @@ def build_library_conversation() -> ConversationHandler:
                 CallbackQueryHandler(go_to_grades, pattern=f"^{PREFIX}:go$"),
                 CallbackQueryHandler(select_grade, pattern=f"^{PREFIX}:grade:"),
                 CallbackQueryHandler(exit_to_main_menu, pattern=r"^menu:main$"),
+                CallbackQueryHandler(back_to_intro, pattern=f"^{PREFIX}:back$"),
             ],
             SEL_MAJOR: [
                 CallbackQueryHandler(select_major, pattern=f"^{PREFIX}:major:"),
                 CallbackQueryHandler(exit_to_main_menu, pattern=r"^menu:main$"),
+                CallbackQueryHandler(go_to_grades, pattern=f"^{PREFIX}:back$"),
             ],
             SEL_SUBJECT: [
                 CallbackQueryHandler(select_subject, pattern=f"^{PREFIX}:subj:"),
                 CallbackQueryHandler(report_missing_book, pattern=f"^{PREFIX}:report$"),
                 CallbackQueryHandler(back_to_subjects, pattern=f"^{PREFIX}:back_subj$"),
                 CallbackQueryHandler(exit_to_main_menu, pattern=r"^menu:main$"),
-                CallbackQueryHandler(go_to_grades, pattern=f"^{PREFIX}:back$"),
+                CallbackQueryHandler(back_to_majors, pattern=f"^{PREFIX}:back$"),
             ],
         },
         fallbacks=[
