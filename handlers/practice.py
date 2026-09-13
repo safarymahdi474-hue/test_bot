@@ -28,15 +28,34 @@ def _ud(context: ContextTypes.DEFAULT_TYPE) -> dict:
     return context.user_data.setdefault("practice", {})
 
 
-async def entry_practice(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    query = update.callback_query
-    await query.answer()
-    context.user_data["practice"] = {}
-    await query.edit_message_text(
+async def _render_grade_screen(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    await update.callback_query.edit_message_text(
         "🎯 تمرین و آزمون\n━━━━━━━━━━━━━━━\nپایه‌ت رو انتخاب کن:",
         reply_markup=grades_keyboard(PREFIX),
     )
     return SEL_GRADE
+
+
+async def entry_practice(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    query = update.callback_query
+    await query.answer()
+    context.user_data["practice"] = {}
+    return await _render_grade_screen(update, context)
+
+
+async def back_to_main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    query = update.callback_query
+    await query.answer()
+    from handlers.main_menu import main_menu_callback
+    await main_menu_callback(update, context)
+    return ConversationHandler.END
+
+
+async def _render_major_screen(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    await update.callback_query.edit_message_text(
+        "رشته‌ت رو انتخاب کن:", reply_markup=majors_keyboard(PREFIX)
+    )
+    return SEL_MAJOR
 
 
 async def select_grade(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -44,10 +63,22 @@ async def select_grade(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
     await query.answer()
     grade = query.data.split(":", 2)[2]
     _ud(context)["grade"] = grade
-    await query.edit_message_text(
-        "رشته‌ت رو انتخاب کن:", reply_markup=majors_keyboard(PREFIX)
+    return await _render_major_screen(update, context)
+
+
+async def back_to_grade(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    query = update.callback_query
+    await query.answer()
+    return await _render_grade_screen(update, context)
+
+
+async def _render_subject_screen(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    ud = _ud(context)
+    await update.callback_query.edit_message_text(
+        f"📚 دروس {ud['grade']} {ud['major']}:",
+        reply_markup=subjects_keyboard(PREFIX, ud["major"]),
     )
-    return SEL_MAJOR
+    return SEL_SUBJECT
 
 
 async def select_major(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -55,23 +86,20 @@ async def select_major(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
     await query.answer()
     major = query.data.split(":", 2)[2]
     _ud(context)["major"] = major
-    await query.edit_message_text(
-        f"📚 دروس {_ud(context)['grade']} {major}:",
-        reply_markup=subjects_keyboard(PREFIX, major),
-    )
-    return SEL_SUBJECT
+    return await _render_subject_screen(update, context)
 
 
-async def select_subject(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+async def back_to_major(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     query = update.callback_query
     await query.answer()
-    subject = query.data.split(":", 2)[2]
-    ud = _ud(context)
-    ud["subject"] = subject
+    return await _render_major_screen(update, context)
 
-    books = C.list_test_books(ud["grade"], ud["major"], subject)
+
+async def _render_book_screen(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    ud = _ud(context)
+    books = C.list_test_books(ud["grade"], ud["major"], ud["subject"])
     if not books:
-        await query.edit_message_text(
+        await update.callback_query.edit_message_text(
             "📖 هنوز تستی برای این درس ثبت نشده. یه درس دیگه رو امتحان کن.",
             reply_markup=subjects_keyboard(PREFIX, ud["major"]),
         )
@@ -79,31 +107,69 @@ async def select_subject(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
     rows = [[InlineKeyboardButton(b["name"], callback_data=f"{PREFIX}:tbook:{b['id']}")]
             for b in books]
-    await query.edit_message_text(
+    await update.callback_query.edit_message_text(
         "📖 کتاب تستت رو انتخاب کن:", reply_markup=with_back(rows, callback_data=f"{PREFIX}:back")
     )
     return SEL_BOOK
+
+
+async def select_subject(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    query = update.callback_query
+    await query.answer()
+    subject = query.data.split(":", 2)[2]
+    _ud(context)["subject"] = subject
+    return await _render_book_screen(update, context)
+
+
+async def back_to_subject(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    query = update.callback_query
+    await query.answer()
+    return await _render_subject_screen(update, context)
+
+
+async def _render_chapter_screen(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    ud = _ud(context)
+    book = C.get_test_book(ud["test_book_id"])
+    chapters = C.list_chapters(ud["test_book_id"])
+    if not chapters:
+        await update.callback_query.edit_message_text("📚 برای این کتاب هنوز فصلی ثبت نشده.")
+        return ConversationHandler.END
+
+    rows = [[InlineKeyboardButton(ch["name"], callback_data=f"{PREFIX}:chap:{ch['id']}")]
+            for ch in chapters]
+    await update.callback_query.edit_message_text(
+        f"📚 فصل‌های {book['name']} — {ud['subject']}:",
+        reply_markup=with_back(rows, callback_data=f"{PREFIX}:back"),
+    )
+    return SEL_CHAPTER
 
 
 async def select_book(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     query = update.callback_query
     await query.answer()
     test_book_id = int(query.data.split(":", 2)[2])
+    _ud(context)["test_book_id"] = test_book_id
+    return await _render_chapter_screen(update, context)
+
+
+async def back_to_book(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    query = update.callback_query
+    await query.answer()
+    return await _render_book_screen(update, context)
+
+
+async def _render_range_screen(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     ud = _ud(context)
-    ud["test_book_id"] = test_book_id
-
-    book = C.get_test_book(test_book_id)
-    chapters = C.list_chapters(test_book_id)
-    if not chapters:
-        await query.edit_message_text("📚 برای این کتاب هنوز فصلی ثبت نشده.")
-        return ConversationHandler.END
-
-    rows = [[InlineKeyboardButton(ch["name"], callback_data=f"{PREFIX}:chap:{ch['id']}")]
-            for ch in chapters]
-    await query.edit_message_text(
-        f"📚 فصل‌های {book['name']} — {ud['subject']}:", reply_markup=with_back(rows, callback_data=f"{PREFIX}:back")
+    chapter = C.get_chapter(ud["chapter_id"])
+    bounds = (ud["min_number"], ud["max_number"])
+    rows = [[InlineKeyboardButton("همه تست‌ها", callback_data=f"{PREFIX}:allrange")]]
+    await update.callback_query.edit_message_text(
+        f"📝 فصل {chapter['name']}\n"
+        f"تست‌های این فصل: {bounds[0]} تا {bounds[1]}\n\n"
+        "از کدوم تا کدوم بزنی؟\n(مثال: {}-{})".format(bounds[0], bounds[1]),
+        reply_markup=with_back(rows, callback_data=f"{PREFIX}:back"),
     )
-    return SEL_CHAPTER
+    return SEL_RANGE
 
 
 async def select_chapter(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -113,21 +179,19 @@ async def select_chapter(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     ud = _ud(context)
     ud["chapter_id"] = chapter_id
 
-    chapter = C.get_chapter(chapter_id)
     bounds = C.get_min_max_question_number(chapter_id)
     if bounds is None:
         await query.edit_message_text("📝 برای این فصل هنوز سوالی ثبت نشده.")
         return ConversationHandler.END
 
     ud["min_number"], ud["max_number"] = bounds
-    rows = [[InlineKeyboardButton("همه تست‌ها", callback_data=f"{PREFIX}:allrange")]]
-    await query.edit_message_text(
-        f"📝 فصل {chapter['name']}\n"
-        f"تست‌های این فصل: {bounds[0]} تا {bounds[1]}\n\n"
-        "از کدوم تا کدوم بزنی؟\n(مثال: {}-{})".format(bounds[0], bounds[1]),
-        reply_markup=with_back(rows, callback_data=f"{PREFIX}:back"),
-    )
-    return SEL_RANGE
+    return await _render_range_screen(update, context)
+
+
+async def back_to_chapter(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    query = update.callback_query
+    await query.answer()
+    return await _render_chapter_screen(update, context)
 
 
 async def select_range_all(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -147,6 +211,12 @@ async def select_range_text(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     ud["start"], ud["end"] = start, end
     await update.message.reply_text(f"✅ محدوده: تست {start} تا {end}")
     return await _ask_mode(update, context)
+
+
+async def back_to_range(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    query = update.callback_query
+    await query.answer()
+    return await _render_range_screen(update, context)
 
 
 async def _ask_mode(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -182,6 +252,12 @@ async def select_mode(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
     rows = [[InlineKeyboardButton("🚀 شروع آزمون", callback_data=f"{PREFIX}:launch")]]
     await query.edit_message_text(text, reply_markup=with_back(rows, callback_data=f"{PREFIX}:back"))
     return PRE_START
+
+
+async def back_to_mode(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    query = update.callback_query
+    await query.answer()
+    return await _ask_mode(update, context)
 
 
 async def launch_exam(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -410,17 +486,39 @@ def build_practice_conversation() -> ConversationHandler:
             CallbackQueryHandler(restart_exam, pattern=f"^{PREFIX}:restart$"),
         ],
         states={
-            SEL_GRADE: [CallbackQueryHandler(select_grade, pattern=f"^{PREFIX}:grade:")],
-            SEL_MAJOR: [CallbackQueryHandler(select_major, pattern=f"^{PREFIX}:major:")],
-            SEL_SUBJECT: [CallbackQueryHandler(select_subject, pattern=f"^{PREFIX}:subject:")],
-            SEL_BOOK: [CallbackQueryHandler(select_book, pattern=f"^{PREFIX}:tbook:")],
-            SEL_CHAPTER: [CallbackQueryHandler(select_chapter, pattern=f"^{PREFIX}:chap:")],
+            SEL_GRADE: [
+                CallbackQueryHandler(select_grade, pattern=f"^{PREFIX}:grade:"),
+                CallbackQueryHandler(back_to_main_menu, pattern=f"^{PREFIX}:back$"),
+            ],
+            SEL_MAJOR: [
+                CallbackQueryHandler(select_major, pattern=f"^{PREFIX}:major:"),
+                CallbackQueryHandler(back_to_grade, pattern=f"^{PREFIX}:back$"),
+            ],
+            SEL_SUBJECT: [
+                CallbackQueryHandler(select_subject, pattern=f"^{PREFIX}:subject:"),
+                CallbackQueryHandler(back_to_major, pattern=f"^{PREFIX}:back$"),
+            ],
+            SEL_BOOK: [
+                CallbackQueryHandler(select_book, pattern=f"^{PREFIX}:tbook:"),
+                CallbackQueryHandler(back_to_subject, pattern=f"^{PREFIX}:back$"),
+            ],
+            SEL_CHAPTER: [
+                CallbackQueryHandler(select_chapter, pattern=f"^{PREFIX}:chap:"),
+                CallbackQueryHandler(back_to_book, pattern=f"^{PREFIX}:back$"),
+            ],
             SEL_RANGE: [
                 CallbackQueryHandler(select_range_all, pattern=f"^{PREFIX}:allrange$"),
+                CallbackQueryHandler(back_to_chapter, pattern=f"^{PREFIX}:back$"),
                 MessageHandler(filters.TEXT & ~filters.COMMAND, select_range_text),
             ],
-            SEL_MODE: [CallbackQueryHandler(select_mode, pattern=f"^{PREFIX}:mode:")],
-            PRE_START: [CallbackQueryHandler(launch_exam, pattern=f"^{PREFIX}:launch$")],
+            SEL_MODE: [
+                CallbackQueryHandler(select_mode, pattern=f"^{PREFIX}:mode:"),
+                CallbackQueryHandler(back_to_range, pattern=f"^{PREFIX}:back$"),
+            ],
+            PRE_START: [
+                CallbackQueryHandler(launch_exam, pattern=f"^{PREFIX}:launch$"),
+                CallbackQueryHandler(back_to_mode, pattern=f"^{PREFIX}:back$"),
+            ],
             IN_EXAM: [
                 CallbackQueryHandler(submit_answer_callback, pattern=f"^{PREFIX}:answer:"),
                 CallbackQueryHandler(skip_question, pattern=f"^{PREFIX}:next$"),
@@ -431,7 +529,10 @@ def build_practice_conversation() -> ConversationHandler:
             REPORT_DESC: [MessageHandler(filters.TEXT & ~filters.COMMAND, receive_report_desc)],
         },
         fallbacks=[
-            CallbackQueryHandler(entry_practice, pattern=f"^{PREFIX}:back$"),
+            # راه فرار عمومی: اگه یه‌جا (به‌خاطر باگ احتمالی یا state قدیمی) هیچ‌کدوم
+            # از handlerهای بالا "prac:back" رو نگرفتن، حداقل برگرد به انتخاب پایه
+            # به‌جای اینکه کاربر گیر بیفته.
+            CallbackQueryHandler(back_to_grade, pattern=f"^{PREFIX}:back$"),
             # اگه کاربر وسط یه مرحله گیر کرده باشه (مثلاً با /start یا منوی اصلی
             # خارج شده و این ConversationHandler هنوز state قدیمیش رو نگه داشته)،
             # کلیک دوباره روی همین دکمه‌های ورودی باید از نو شروع کنه، نه اینکه
