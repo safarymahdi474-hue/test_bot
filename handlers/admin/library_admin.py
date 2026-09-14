@@ -1,6 +1,7 @@
 """
 📚 مدیریت کتاب‌ها (سمت ادمین) — مشاهده لیست موجود/ناموجود.
-افزودن فایل با فوروارد کردن فایل به همراه کپشن به ربات انجام می‌شه (در bot.py هندل می‌شه).
+افزودن فایل با فوروارد کردن فایل به همراه کپشن «پایه | رشته | درس | ناشر»
+به ربات انجام می‌شه (در bot.py هندل می‌شه).
 """
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes, CallbackQueryHandler
@@ -50,7 +51,7 @@ async def show_library_list(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     lines = ["📚 لیست کتاب‌ها", "━━━━━━━━━━━━━━━", f"صفحه {page} از {total_pages}", ""]
     for b in books:
         mark = "✅" if b["available"] else "❌"
-        lines.append(f"{mark} {b['subject']} {b['grade']} — {b['major']}")
+        lines.append(f"{mark} {b['subject']} {b['grade']} — {b['major']} — {b['publisher']}")
     if not books:
         lines.append("کتابی ثبت نشده.")
 
