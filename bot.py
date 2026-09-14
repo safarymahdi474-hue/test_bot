@@ -59,23 +59,29 @@ async def admin_library_file_upload(update: Update, context: ContextTypes.DEFAUL
         return  # فایلی که کپشن استاندارد نداره، مربوط به این قابلیت نیست
 
     parts = [p.strip() for p in caption.split("|")]
-    if len(parts) != 3:
+    if len(parts) != 4:
         await update.message.reply_text(
-            "❌ فرمت کپشن باید «پایه | رشته | درس» باشه. مثال:\nدهم | علوم تجربی | ریاضی"
+            "❌ فرمت کپشن باید «پایه | رشته | درس | ناشر» باشه. مثال:\n"
+            "دوازدهم | علوم تجربی | فیزیک | خیلی سبز"
         )
         return
 
     from config import GRADES, MAJORS
-    grade, major, subject = parts
+    grade, major, subject, publisher = parts
     if grade not in GRADES or major not in MAJORS:
         await update.message.reply_text(
             f"❌ پایه یا رشته نامعتبره.\nپایه‌ها: {', '.join(GRADES)}\nرشته‌ها: {', '.join(MAJORS)}"
         )
         return
+    if not subject or not publisher:
+        await update.message.reply_text("❌ درس و ناشر نمی‌تونن خالی باشن.")
+        return
 
     file_id = update.message.document.file_id
-    upsert_library_book_file(grade, major, subject, file_id)
-    await update.message.reply_text(f"✅ فایل کتابخانه ثبت شد: {subject} {grade} ({major})")
+    upsert_library_book_file(grade, major, subject, publisher, file_id)
+    await update.message.reply_text(
+        f"✅ فایل کتابخانه ثبت شد: {subject} {grade} ({major}) — {publisher}"
+    )
 
 
 # ==================== زمان‌بندی ریست هفتگی لیدربورد ====================
