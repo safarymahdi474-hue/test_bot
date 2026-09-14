@@ -39,9 +39,10 @@ CREATE TABLE IF NOT EXISTS library_books (
     grade     TEXT NOT NULL,
     major     TEXT NOT NULL,
     subject   TEXT NOT NULL,          -- ریاضی، فیزیک، زیست و ...
+    publisher TEXT NOT NULL,          -- ناشر/نام کتاب، مثل «خیلی سبز»
     file_id   TEXT,                   -- telegram file_id ، تا وقتی خالیه یعنی ناموجود
     available INTEGER NOT NULL DEFAULT 0,
-    UNIQUE(grade, major, subject)
+    UNIQUE(grade, major, subject, publisher)
 );
 
 -- ==================== کتاب‌های تست (خیلی سبز، گاج، ...) ====================
