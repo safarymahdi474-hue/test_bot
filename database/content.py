@@ -14,31 +14,53 @@ def _now() -> str:
 
 # ==================== کتابخانه (فایل‌های دانلودی) ====================
 
-def get_library_book(grade: str, major: str, subject: str) -> sqlite3.Row | None:
+def get_library_book_by_publisher(grade: str, major: str, subject: str, publisher: str) -> sqlite3.Row | None:
     with get_connection() as conn:
         return conn.execute(
             """SELECT * FROM library_books
-               WHERE grade = ? AND major = ? AND subject = ?""",
-            (grade, major, subject),
+               WHERE grade = ? AND major = ? AND subject = ? AND publisher = ?""",
+            (grade, major, subject, publisher),
         ).fetchone()
 
 
-def upsert_library_book_file(grade: str, major: str, subject: str, file_id: str) -> None:
+def get_library_book(book_id: int) -> sqlite3.Row | None:
+    with get_connection() as conn:
+        return conn.execute(
+            "SELECT * FROM library_books WHERE id = ?", (book_id,)
+        ).fetchone()
+
+
+def upsert_library_book_file(grade: str, major: str, subject: str, publisher: str, file_id: str) -> sqlite3.Row:
     with get_connection() as conn:
         conn.execute(
-            """INSERT INTO library_books (grade, major, subject, file_id, available)
-               VALUES (?, ?, ?, ?, 1)
-               ON CONFLICT(grade, major, subject)
+            """INSERT INTO library_books (grade, major, subject, publisher, file_id, available)
+               VALUES (?, ?, ?, ?, ?, 1)
+               ON CONFLICT(grade, major, subject, publisher)
                DO UPDATE SET file_id = excluded.file_id, available = 1""",
-            (grade, major, subject, file_id),
+            (grade, major, subject, publisher, file_id),
         )
+        return conn.execute(
+            """SELECT * FROM library_books
+               WHERE grade=? AND major=? AND subject=? AND publisher=?""",
+            (grade, major, subject, publisher),
+        ).fetchone()
+
+
+def list_library_books_for_subject(grade: str, major: str, subject: str) -> list[sqlite3.Row]:
+    """همه‌ی ناشرهایی که برای این پایه/رشته/درس کتاب دارن."""
+    with get_connection() as conn:
+        return conn.execute(
+            """SELECT * FROM library_books WHERE grade = ? AND major = ? AND subject = ?
+               ORDER BY publisher""",
+            (grade, major, subject),
+        ).fetchall()
 
 
 def list_library_books(grade: str, major: str) -> list[sqlite3.Row]:
     with get_connection() as conn:
         return conn.execute(
             """SELECT * FROM library_books WHERE grade = ? AND major = ?
-               ORDER BY subject""",
+               ORDER BY subject, publisher""",
             (grade, major),
         ).fetchall()
 
@@ -56,7 +78,7 @@ def list_all_library_books_page(page: int, page_size: int) -> list[sqlite3.Row]:
     offset = max(page - 1, 0) * page_size
     with get_connection() as conn:
         return conn.execute(
-            """SELECT * FROM library_books ORDER BY grade, major, subject
+            """SELECT * FROM library_books ORDER BY grade, major, subject, publisher
                LIMIT ? OFFSET ?""",
             (page_size, offset),
         ).fetchall()
