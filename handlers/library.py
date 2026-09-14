@@ -1,5 +1,7 @@
 """
 بخش ۶: کتابخانه (دانلود کتاب‌های درسی).
+هر درس می‌تونه چند ناشر داشته باشه (مثل تمرین و آزمون)، پس بعد از انتخاب
+درس، یه لیست از ناشرها نشون داده می‌شه، نه مستقیم یه فایل.
 """
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes, ConversationHandler, CallbackQueryHandler
@@ -8,7 +10,7 @@ from database import content as C
 from database.misc import create_book_request
 from utils.keyboards import grades_keyboard, majors_keyboard, with_back
 
-SEL_GRADE, SEL_MAJOR, SEL_SUBJECT = range(3)
+SEL_GRADE, SEL_MAJOR, SEL_SUBJECT, SEL_PUBLISHER = range(4)
 PREFIX = "lib"
 
 
@@ -52,9 +54,6 @@ async def go_to_grades(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
 
 
 async def back_to_intro(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """دکمه‌ی «بازگشت» توی صفحه‌ی انتخاب پایه؛ چون این اولین قدمه، برمی‌گرده
-    به صفحه‌ی معرفی کتابخونه (نه اینکه دوباره همون صفحه رو نشون بده -
-    که تلگرام edit با متن/دکمه‌ی یکسان رو خطا می‌ده)."""
     return await entry_library(update, context)
 
 
@@ -76,12 +75,11 @@ async def select_grade(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
 
 
 async def _show_subjects(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    query = update.callback_query
     ud = _ud(context)
     from config import SUBJECTS_BY_MAJOR
     subjects = SUBJECTS_BY_MAJOR.get(ud["major"], [])
     rows = [[InlineKeyboardButton(s, callback_data=f"{PREFIX}:subj:{s}")] for s in subjects]
-    await query.edit_message_text(
+    await update.callback_query.edit_message_text(
         f"📚 کتاب‌های {ud['grade']} {ud['major']}:", reply_markup=with_back(rows, callback_data=f"{PREFIX}:back")
     )
     return SEL_SUBJECT
@@ -100,46 +98,78 @@ async def back_to_majors(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     return await _show_majors(update, context)
 
 
-async def back_to_subjects(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    query = update.callback_query
-    await query.answer()
-    return await _show_subjects(update, context)
+async def _show_publishers(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    ud = _ud(context)
+    books = C.list_library_books_for_subject(ud["grade"], ud["major"], ud["subject"])
+
+    if not books:
+        rows = [
+            [InlineKeyboardButton("📢 گزارش به مدیر", callback_data=f"{PREFIX}:report")],
+            [InlineKeyboardButton("🔙 بازگشت به لیست درس‌ها", callback_data=f"{PREFIX}:back_subj")],
+            [InlineKeyboardButton("🏠 بازگشت به منوی اصلی", callback_data="menu:main")],
+        ]
+        await update.callback_query.edit_message_text(
+            f"📕 {ud['subject']} {ud['grade']}\n━━━━━━━━━━━━━━━\n"
+            "❌ متأسفانه فایلی برای این درس ثبت نشده.\n\n"
+            "می‌تونی به مدیر گزارش بدی تا اضافه کنه 🌹",
+            reply_markup=InlineKeyboardMarkup(rows),
+        )
+        return SEL_SUBJECT
+
+    rows = [[InlineKeyboardButton(f"📕 {b['publisher']}", callback_data=f"{PREFIX}:pub:{b['id']}")]
+            for b in books]
+    rows.append([InlineKeyboardButton("📢 ناشر دیگه‌ای می‌خوام", callback_data=f"{PREFIX}:report")])
+    await update.callback_query.edit_message_text(
+        f"📚 {ud['subject']} {ud['grade']} — کدوم ناشر رو می‌خوای؟",
+        reply_markup=with_back(rows, callback_data=f"{PREFIX}:back"),
+    )
+    return SEL_PUBLISHER
 
 
 async def select_subject(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     query = update.callback_query
     await query.answer()
     subject = query.data.split(":", 2)[2]
+    _ud(context)["subject"] = subject
+    return await _show_publishers(update, context)
+
+
+async def back_to_subjects(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    query = update.callback_query
+    await query.answer()
+    return await _show_subjects(update, context)
+
+
+async def back_to_publishers(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    await update.callback_query.answer()
+    return await _show_publishers(update, context)
+
+
+async def select_publisher(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    query = update.callback_query
+    await query.answer()
+    book_id = int(query.data.split(":", 2)[2])
     ud = _ud(context)
-    book = C.get_library_book(ud["grade"], ud["major"], subject)
 
-    ud["subject"] = subject
+    book = C.get_library_book(book_id)
+    if book is None or not book["available"] or not book["file_id"]:
+        await query.answer("❌ این فایل دیگه در دسترس نیست.", show_alert=True)
+        return await _show_publishers(update, context)
 
-    if book and book["available"] and book["file_id"]:
-        await query.message.reply_document(
-            document=book["file_id"],
-            caption=f"📕 {subject} {ud['grade']}\n✅ فایل آماده دانلوده.",
-        )
-        rows = [
-            [InlineKeyboardButton("🔙 بازگشت به لیست کتاب‌ها", callback_data=f"{PREFIX}:back_subj")],
-            [InlineKeyboardButton("🏠 بازگشت به منوی اصلی", callback_data="menu:main")],
-        ]
-        await query.edit_message_text(f"📕 {subject} {ud['grade']}\n━━━━━━━━━━━━━━━\n✅ فایل آماده دانلوده.",
-                                       reply_markup=InlineKeyboardMarkup(rows))
-        return SEL_SUBJECT
-
+    await query.message.reply_document(
+        document=book["file_id"],
+        caption=f"📕 {book['subject']} {book['grade']} — {book['publisher']}\n✅ فایل آماده دانلوده.",
+    )
     rows = [
-        [InlineKeyboardButton("📢 گزارش به مدیر", callback_data=f"{PREFIX}:report")],
-        [InlineKeyboardButton("🔙 بازگشت به لیست کتاب‌ها", callback_data=f"{PREFIX}:back_subj")],
+        [InlineKeyboardButton("🔙 بازگشت به لیست ناشرها", callback_data=f"{PREFIX}:back_pub")],
         [InlineKeyboardButton("🏠 بازگشت به منوی اصلی", callback_data="menu:main")],
     ]
     await query.edit_message_text(
-        f"📕 {subject} {ud['grade']}\n━━━━━━━━━━━━━━━\n"
-        "❌ متأسفانه فایل این کتاب فعلاً موجود نیست.\n\n"
-        "می‌تونی به مدیر گزارش بدی تا اضافه کنه 🌹",
+        f"📕 {book['subject']} {book['grade']} — {book['publisher']}\n"
+        "━━━━━━━━━━━━━━━\n✅ فایل آماده دانلوده.",
         reply_markup=InlineKeyboardMarkup(rows),
     )
-    return SEL_SUBJECT
+    return SEL_PUBLISHER
 
 
 async def report_missing_book(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -174,6 +204,13 @@ def build_library_conversation() -> ConversationHandler:
                 CallbackQueryHandler(back_to_subjects, pattern=f"^{PREFIX}:back_subj$"),
                 CallbackQueryHandler(exit_to_main_menu, pattern=r"^menu:main$"),
                 CallbackQueryHandler(back_to_majors, pattern=f"^{PREFIX}:back$"),
+            ],
+            SEL_PUBLISHER: [
+                CallbackQueryHandler(select_publisher, pattern=f"^{PREFIX}:pub:"),
+                CallbackQueryHandler(report_missing_book, pattern=f"^{PREFIX}:report$"),
+                CallbackQueryHandler(back_to_publishers, pattern=f"^{PREFIX}:back_pub$"),
+                CallbackQueryHandler(exit_to_main_menu, pattern=r"^menu:main$"),
+                CallbackQueryHandler(back_to_subjects, pattern=f"^{PREFIX}:back$"),
             ],
         },
         fallbacks=[
