@@ -267,3 +267,30 @@ def count_user_mistakes(user_id: int, cap: int | None = None) -> int:
                 (user_id,),
             ).fetchone()
         return row["c"]
+
+
+# ==================== وضعیت سوالات یک فصل برای یک کاربر (✅/❌ تو لیست تست‌ها) ====================
+
+def get_chapter_question_status(user_id: int, chapter_id: int) -> dict[int, bool]:
+    """
+    آخرین وضعیت پاسخ کاربر به تک‌تک سوالات این فصل رو برمی‌گردونه:
+    {شماره_سوال: True (درست) یا False (غلط)}.
+    سوالاتی که اصلاً پاسخ داده نشدن توی این دیکشنری نیستن (یعنی نه تیک، نه ضربدر).
+    اگه کاربر یه سوال رو چند بار زده باشه، فقط آخرین پاسخش حساب می‌شه.
+    """
+    with get_connection() as conn:
+        rows = conn.execute(
+            """SELECT q.number AS number, ea.is_correct AS is_correct
+               FROM exam_answers ea
+               JOIN exam_sessions es ON ea.session_id = es.id
+               JOIN questions q ON ea.question_id = q.id
+               WHERE es.user_id = ? AND q.chapter_id = ? AND ea.selected_option IS NOT NULL
+               ORDER BY ea.answered_at ASC""",
+            (user_id, chapter_id),
+        ).fetchall()
+        status: dict[int, bool] = {}
+        for r in rows:
+            # چون به ترتیب زمانی صعودی می‌خونیم، آخرین رکورد هر شماره در نهایت
+            # جایگزین مقدار قبلی می‌شه؛ یعنی همیشه جدیدترین پاسخ باقی می‌مونه.
+            status[r["number"]] = bool(r["is_correct"])
+        return status
