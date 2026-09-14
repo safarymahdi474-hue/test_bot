@@ -108,7 +108,7 @@ async def _render_book_screen(update: Update, context: ContextTypes.DEFAULT_TYPE
     rows = [[InlineKeyboardButton(b["name"], callback_data=f"{PREFIX}:tbook:{b['id']}")]
             for b in books]
     await update.callback_query.edit_message_text(
-        "📖 کتاب تستت رو انتخاب کن:", reply_markup=with_back(rows, callback_data=f"{PREFIX}:back")
+        "📖 ناشر (کتاب تست) رو انتخاب کن:", reply_markup=with_back(rows, callback_data=f"{PREFIX}:back")
     )
     return SEL_BOOK
 
@@ -158,14 +158,41 @@ async def back_to_book(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
     return await _render_book_screen(update, context)
 
 
+def _format_question_grid(min_n: int, max_n: int, status: dict[int, bool]) -> str:
+    """
+    شبکه‌ی شماره‌ی تست‌ها با علامت وضعیت:
+    ✅ = قبلاً درست زده، ❌ = قبلاً غلط زده، بدون علامت = هنوز نزده.
+    """
+    lines = []
+    row = []
+    for n in range(min_n, max_n + 1):
+        if n in status:
+            mark = "✅" if status[n] else "❌"
+        else:
+            mark = ""
+        row.append(f"{n}{mark}")
+        if len(row) == 10:
+            lines.append(" ".join(row))
+            row = []
+    if row:
+        lines.append(" ".join(row))
+    return "\n".join(lines)
+
+
 async def _render_range_screen(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     ud = _ud(context)
     chapter = C.get_chapter(ud["chapter_id"])
     bounds = (ud["min_number"], ud["max_number"])
+    user_id = update.effective_user.id
+    status = E.get_chapter_question_status(user_id, ud["chapter_id"])
+    grid = _format_question_grid(bounds[0], bounds[1], status)
+
     rows = [[InlineKeyboardButton("همه تست‌ها", callback_data=f"{PREFIX}:allrange")]]
     await update.callback_query.edit_message_text(
         f"📝 فصل {chapter['name']}\n"
         f"تست‌های این فصل: {bounds[0]} تا {bounds[1]}\n\n"
+        f"{grid}\n\n"
+        "✅ درست زدی   ❌ غلط زدی   بدون علامت = نزدی\n\n"
         "از کدوم تا کدوم بزنی؟\n(مثال: {}-{})".format(bounds[0], bounds[1]),
         reply_markup=with_back(rows, callback_data=f"{PREFIX}:back"),
     )
