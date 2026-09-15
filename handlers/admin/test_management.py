@@ -57,10 +57,10 @@ async def entry_test_management(update: Update, context: ContextTypes.DEFAULT_TY
         lines.append("هنوز کتابی ثبت نشده.")
 
     rows = [
-        [InlineKeyboardButton("➕ افزودن کتاب تست", callback_data="admin:add_book")],
-        [InlineKeyboardButton("➕ افزودن تست (با عکس)", callback_data="admin:add_test")],
-        [InlineKeyboardButton("📤 آپلود دسته‌جمعی (ZIP)", callback_data="admin:upload_bulk")],
-        [InlineKeyboardButton("⚠️ گزارش‌های اشکال تست", callback_data="admin:question_reports")],
+        [InlineKeyboardButton("➕ افزودن کتاب تست", callback_data="admin:add_book", style="success")],
+        [InlineKeyboardButton("➕ افزودن تست (با عکس)", callback_data="admin:add_test", style="success")],
+        [InlineKeyboardButton("📤 آپلود دسته‌جمعی (ZIP)", callback_data="admin:upload_bulk", style="primary")],
+        [InlineKeyboardButton("⚠️ گزارش‌های اشکال تست", callback_data="admin:question_reports", style="primary")],
         [InlineKeyboardButton("🔙 بازگشت", callback_data="admin:panel")],
     ]
     await query.edit_message_text("\n".join(lines), reply_markup=InlineKeyboardMarkup(rows))
@@ -174,8 +174,8 @@ async def receive_correct_option(update: Update, context: ContextTypes.DEFAULT_T
     state["correct_option"] = int(raw)
 
     rows = [
-        [InlineKeyboardButton("✅ بله، عکس توضیح/پاسخ دارم", callback_data="addtest:exp_yes")],
-        [InlineKeyboardButton("❌ نه، رد کن", callback_data="addtest:exp_no")],
+        [InlineKeyboardButton("✅ بله، عکس توضیح/پاسخ دارم", callback_data="addtest:exp_yes", style="success")],
+        [InlineKeyboardButton("❌ نه، رد کن", callback_data="addtest:exp_no", style="danger")],
     ]
     await update.message.reply_text(
         "می‌خوای عکس توضیح/پاسخ‌نامه هم اضافه کنی؟", reply_markup=InlineKeyboardMarkup(rows)
