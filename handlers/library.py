@@ -76,8 +76,8 @@ async def select_grade(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
 
 async def _show_subjects(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     ud = _ud(context)
-    from config import SUBJECTS_BY_MAJOR
-    subjects = SUBJECTS_BY_MAJOR.get(ud["major"], [])
+    from config import get_subjects
+    subjects = get_subjects(ud["grade"], ud["major"])
     rows = [[InlineKeyboardButton(s, callback_data=f"{PREFIX}:subj:{s}")] for s in subjects]
     await update.callback_query.edit_message_text(
         f"📚 کتاب‌های {ud['grade']} {ud['major']}:", reply_markup=with_back(rows, callback_data=f"{PREFIX}:back")
