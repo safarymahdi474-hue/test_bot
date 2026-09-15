@@ -49,7 +49,7 @@ async def select_major(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
     ud["major"] = major
     await query.edit_message_text(
         f"📝 امتحان نهایی {ud['grade']} {major}:\n\nدرست رو انتخاب کن:",
-        reply_markup=subjects_keyboard(PREFIX, major),
+        reply_markup=subjects_keyboard(PREFIX, ud["grade"], major),
     )
     return SEL_SUBJECT
 
@@ -71,7 +71,7 @@ async def select_subject(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         await query.edit_message_text(
             f"📝 {subject} {ud['grade']}\n━━━━━━━━━━━━━━━\n"
             "❌ هنوز امتحان نهایی‌ای برای این درس آپلود نشده.",
-            reply_markup=subjects_keyboard(PREFIX, ud["major"]),
+            reply_markup=subjects_keyboard(PREFIX, ud["grade"], ud["major"]),
         )
         return SEL_SUBJECT
 
