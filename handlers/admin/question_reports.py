@@ -106,10 +106,10 @@ async def _show_list_page(update: Update, context: ContextTypes.DEFAULT_TYPE, pa
 
 def _detail_action_rows() -> list[list[InlineKeyboardButton]]:
     return [
-        [InlineKeyboardButton("✏️ عکس سوال", callback_data="qrep:field:question_image_file_id")],
-        [InlineKeyboardButton("✏️ پاسخ صحیح", callback_data="qrep:field:correct_option")],
-        [InlineKeyboardButton("✏️ عکس توضیح/پاسخ", callback_data="qrep:field:explanation_image_file_id")],
-        [InlineKeyboardButton("✅ گزارش نادرسته (بدون تغییر)", callback_data="qrep:reject")],
+        [InlineKeyboardButton("✏️ عکس سوال", callback_data="qrep:field:question_image_file_id", style="primary")],
+        [InlineKeyboardButton("✏️ پاسخ صحیح", callback_data="qrep:field:correct_option", style="primary")],
+        [InlineKeyboardButton("✏️ عکس توضیح/پاسخ", callback_data="qrep:field:explanation_image_file_id", style="primary")],
+        [InlineKeyboardButton("✅ گزارش نادرسته (بدون تغییر)", callback_data="qrep:reject", style="success")],
         [InlineKeyboardButton("🔙 بازگشت", callback_data="qrep:page:1")],
     ]
 
@@ -232,7 +232,7 @@ async def _apply_edit(update: Update, context: ContextTypes.DEFAULT_TYPE,
     rows = []
     if reporter_ids:
         rows.append([InlineKeyboardButton(
-            "📤 اطلاع‌رسانی به گزارش‌دهنده(ها)", callback_data=f"qrep:notify:{question_id}"
+            "📤 اطلاع‌رسانی به گزارش‌دهنده(ها)", callback_data=f"qrep:notify:{question_id}", style="success"
         )])
     rows.append([InlineKeyboardButton("🔙 بازگشت به لیست گزارش‌ها", callback_data="qrep:page:1")])
     await update.message.reply_text("ادامه:", reply_markup=InlineKeyboardMarkup(rows))
