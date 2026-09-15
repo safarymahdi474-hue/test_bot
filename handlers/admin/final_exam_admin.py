@@ -41,7 +41,7 @@ async def entry_stats(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         lines.append("هنوز فایلی آپلود نشده.")
 
     rows = [
-        [InlineKeyboardButton("➕ افزودن امتحان نهایی", callback_data="admin:add_fexam")],
+        [InlineKeyboardButton("➕ افزودن امتحان نهایی", callback_data="admin:add_fexam", style="success")],
         [InlineKeyboardButton("🔙 بازگشت", callback_data="admin:panel")],
     ]
     await query.edit_message_text("\n".join(lines), reply_markup=InlineKeyboardMarkup(rows))
