@@ -187,7 +187,7 @@ async def _render_range_screen(update: Update, context: ContextTypes.DEFAULT_TYP
     status = E.get_chapter_question_status(user_id, ud["chapter_id"])
     grid = _format_question_grid(bounds[0], bounds[1], status)
 
-    rows = [[InlineKeyboardButton("همه تست‌ها", callback_data=f"{PREFIX}:allrange")]]
+    rows = [[InlineKeyboardButton("همه تست‌ها", callback_data=f"{PREFIX}:allrange", style="primary")]]
     await update.callback_query.edit_message_text(
         f"📝 فصل {chapter['name']}\n"
         f"تست‌های این فصل: {bounds[0]} تا {bounds[1]}\n\n"
@@ -276,7 +276,7 @@ async def select_mode(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
         f"📖 {book['name']}\n"
         f"📝 تست {ud['start']} تا {ud['end']}\n"
     )
-    rows = [[InlineKeyboardButton("🚀 شروع آزمون", callback_data=f"{PREFIX}:launch")]]
+    rows = [[InlineKeyboardButton("🚀 شروع آزمون", callback_data=f"{PREFIX}:launch", style="success")]]
     await query.edit_message_text(text, reply_markup=with_back(rows, callback_data=f"{PREFIX}:back"))
     return PRE_START
 
@@ -315,11 +315,11 @@ async def _show_current_question(update: Update, context: ContextTypes.DEFAULT_T
 
     markup_rows = list(plain_options_keyboard(PREFIX).inline_keyboard)
     markup_rows.append([
-        InlineKeyboardButton("⏭ رد کردن", callback_data=f"{PREFIX}:next"),
-        InlineKeyboardButton("⏹ پایان آزمون", callback_data=f"{PREFIX}:stop"),
+        InlineKeyboardButton("⏭ رد کردن", callback_data=f"{PREFIX}:next", style="primary"),
+        InlineKeyboardButton("⏹ پایان آزمون", callback_data=f"{PREFIX}:stop", style="danger"),
     ])
     markup_rows.append([
-        InlineKeyboardButton("⚠️ گزارش اشکال در این تست", callback_data=f"{PREFIX}:report:{q['id']}")
+        InlineKeyboardButton("⚠️ گزارش اشکال در این تست", callback_data=f"{PREFIX}:report:{q['id']}", style="primary")
     ])
     markup = InlineKeyboardMarkup(markup_rows)
 
@@ -416,9 +416,9 @@ async def _finish_and_show_results(update: Update, context: ContextTypes.DEFAULT
 
     rows = [[InlineKeyboardButton("📊 کارنامه کامل", callback_data="menu:report_card")]]
     if was_early:
-        rows.append([InlineKeyboardButton("🔁 ادامه آزمون", callback_data=f"{PREFIX}:resume:{session_id}")])
+        rows.append([InlineKeyboardButton("🔁 ادامه آزمون", callback_data=f"{PREFIX}:resume:{session_id}", style="success")])
     else:
-        rows.append([InlineKeyboardButton("🔁 دوباره", callback_data=f"{PREFIX}:restart")])
+        rows.append([InlineKeyboardButton("🔁 دوباره", callback_data=f"{PREFIX}:restart", style="primary")])
     rows.append([InlineKeyboardButton("🏠 بازگشت به منو", callback_data="menu:main")])
 
     markup = InlineKeyboardMarkup(rows)
@@ -463,7 +463,7 @@ async def start_report(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
     question_id = int(query.data.split(":", 2)[2])
     context.user_data["report_question_id"] = question_id
 
-    rows = [[InlineKeyboardButton(label, callback_data=f"rep:type:{key}")]
+    rows = [[InlineKeyboardButton(label, callback_data=f"rep:type:{key}", style="primary")]
             for key, label in QUESTION_REPORT_TYPES.items()]
     # توجه: پیام مبدا (سوال) الان یه عکسه، نه متن؛ نمی‌شه با edit_message_text
     # یه عکس رو به متن تبدیل کرد، پس یه پیام جدید می‌فرستیم.
