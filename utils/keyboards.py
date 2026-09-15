@@ -66,8 +66,8 @@ def test_book_publishers_keyboard(prefix: str, available_names: list[str] | None
 def confirm_keyboard(yes_data: str, no_data: str,
                       yes_text: str = "✅ بله", no_text: str = "✏️ ویرایش") -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup([
-        [InlineKeyboardButton(yes_text, callback_data=yes_data)],
-        [InlineKeyboardButton(no_text, callback_data=no_data)],
+        [InlineKeyboardButton(yes_text, callback_data=yes_data, style="success")],
+        [InlineKeyboardButton(no_text, callback_data=no_data, style="primary")],
     ])
 
 
