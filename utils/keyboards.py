@@ -48,9 +48,10 @@ def majors_keyboard(prefix: str, with_back_button: bool = True,
     return with_back(rows, callback_data=back_callback_data or f"{prefix}:back")
 
 
-def subjects_keyboard(prefix: str, major: str,
+def subjects_keyboard(prefix: str, grade: str, major: str,
                        back_callback_data: str | None = None) -> InlineKeyboardMarkup:
-    subjects = SUBJECTS_BY_MAJOR.get(major, [])
+    from config import get_subjects
+    subjects = get_subjects(grade, major)
     rows = [[InlineKeyboardButton(s, callback_data=f"{prefix}:subject:{s}")] for s in subjects]
     return with_back(rows, callback_data=back_callback_data or f"{prefix}:back")
 
