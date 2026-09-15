@@ -38,9 +38,9 @@ async def receive_broadcast_text(update: Update, context: ContextTypes.DEFAULT_T
 
     preview = f"📢 پیش‌نمایش پیام\n━━━━━━━━━━━━━━━\n{text}\n\n👥 ارسال به: {total} نفر"
     rows = [
-        [InlineKeyboardButton("📤 ارسال", callback_data="bc:send")],
-        [InlineKeyboardButton("✏️ ویرایش", callback_data="bc:edit")],
-        [InlineKeyboardButton("❌ لغو", callback_data="bc:cancel")],
+        [InlineKeyboardButton("📤 ارسال", callback_data="bc:send", style="success")],
+        [InlineKeyboardButton("✏️ ویرایش", callback_data="bc:edit", style="primary")],
+        [InlineKeyboardButton("❌ لغو", callback_data="bc:cancel", style="danger")],
     ]
     await update.message.reply_text(preview, reply_markup=InlineKeyboardMarkup(rows))
     return AWAITING_CONFIRM
