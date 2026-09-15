@@ -76,7 +76,7 @@ async def _render_subject_screen(update: Update, context: ContextTypes.DEFAULT_T
     ud = _ud(context)
     await update.callback_query.edit_message_text(
         f"📚 دروس {ud['grade']} {ud['major']}:",
-        reply_markup=subjects_keyboard(PREFIX, ud["major"]),
+        reply_markup=subjects_keyboard(PREFIX, ud["grade"], ud["major"]),
     )
     return SEL_SUBJECT
 
@@ -101,7 +101,7 @@ async def _render_book_screen(update: Update, context: ContextTypes.DEFAULT_TYPE
     if not books:
         await update.callback_query.edit_message_text(
             "📖 هنوز تستی برای این درس ثبت نشده. یه درس دیگه رو امتحان کن.",
-            reply_markup=subjects_keyboard(PREFIX, ud["major"]),
+            reply_markup=subjects_keyboard(PREFIX, ud["grade"], ud["major"]),
         )
         return SEL_SUBJECT
 
