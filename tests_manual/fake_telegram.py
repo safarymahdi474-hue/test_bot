@@ -14,7 +14,7 @@ def _markup_signature(markup):
         return None
     sig = []
     for row in markup.inline_keyboard:
-        sig.append(tuple((b.text, b.callback_data, b.url) for b in row))
+        sig.append(tuple((b.text, b.callback_data, b.url, getattr(b, "style", None)) for b in row))
     return tuple(sig)
 
 
