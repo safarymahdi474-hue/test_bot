@@ -29,7 +29,7 @@ async def show_profile(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         f"💰 امتیاز: {user['points']:,}\n"
     )
     rows = [
-        [InlineKeyboardButton("✏️ ویرایش اطلاعات", callback_data="profile:edit")],
+        [InlineKeyboardButton("✏️ ویرایش اطلاعات", callback_data="profile:edit", style="primary")],
         [InlineKeyboardButton("🆘 پشتیبانی", callback_data="profile:support")],
         [InlineKeyboardButton("📩 انتقاد و پیشنهاد", callback_data="profile:feedback")],
         [InlineKeyboardButton("🔙 بازگشت", callback_data="menu:main")],
@@ -104,7 +104,7 @@ async def show_report_card(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     if overview["total_tests"] == 0:
         text = "📊 کارنامه من\n━━━━━━━━━━━━━━━\nهنوز تستی نزدی!\nبریم اولین تستت رو بزنیم؟"
         rows = [
-            [InlineKeyboardButton("🎯 شروع تست", callback_data="menu:practice")],
+            [InlineKeyboardButton("🎯 شروع تست", callback_data="menu:practice", style="success")],
             [InlineKeyboardButton("🔙 بازگشت", callback_data="menu:main")],
         ]
         await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(rows))
