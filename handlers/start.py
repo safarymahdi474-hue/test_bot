@@ -30,9 +30,9 @@ def _welcome_text(full_name: str) -> str:
 
 
 async def _show_join_prompt(update: Update, unjoined: list[dict]) -> None:
-    rows = [[InlineKeyboardButton(f"📢 عضویت در {ch['title']}", url=ch["invite_link"])]
+    rows = [[InlineKeyboardButton(f"📢 عضویت در {ch['title']}", url=ch["invite_link"], style="primary")]
             for ch in unjoined]
-    rows.append([InlineKeyboardButton("✅ عضو شدم", callback_data="joincheck")])
+    rows.append([InlineKeyboardButton("✅ عضو شدم", callback_data="joincheck", style="success")])
     text = "📢 برای استفاده از ربات، اول در کانال(های) زیر عضو شو:"
     markup = InlineKeyboardMarkup(rows)
     if update.callback_query:
@@ -81,7 +81,7 @@ async def _after_join_check(update: Update, context: ContextTypes.DEFAULT_TYPE) 
         return ConversationHandler.END
 
     text = _welcome_text(tg_user.first_name or "دوست من")
-    markup = InlineKeyboardMarkup([[InlineKeyboardButton("✅ شروع ثبت‌نام", callback_data="reg:begin")]])
+    markup = InlineKeyboardMarkup([[InlineKeyboardButton("✅ شروع ثبت‌نام", callback_data="reg:begin", style="success")]])
     if update.callback_query:
         await update.callback_query.edit_message_text(text, reply_markup=markup)
     else:
