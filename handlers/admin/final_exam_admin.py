@@ -79,7 +79,7 @@ async def select_major(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
     ud = _ud(context)
     ud["major"] = major
     await query.edit_message_text(
-        "درس رو انتخاب کن:", reply_markup=subjects_keyboard(PREFIX, major)
+        "درس رو انتخاب کن:", reply_markup=subjects_keyboard(PREFIX, ud["grade"], major)
     )
     return SEL_SUBJECT
 
