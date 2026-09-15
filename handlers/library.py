@@ -28,7 +28,7 @@ async def entry_library(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
         "هر وقت خواستی، فقط انتخاب کن و دانلود کن."
     )
     rows = [
-        [InlineKeyboardButton("🚀 شروع", callback_data=f"{PREFIX}:go")],
+        [InlineKeyboardButton("🚀 شروع", callback_data=f"{PREFIX}:go", style="success")],
         [InlineKeyboardButton("🔙 بازگشت", callback_data="menu:main")],
     ]
     await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(rows))
@@ -104,7 +104,7 @@ async def _show_publishers(update: Update, context: ContextTypes.DEFAULT_TYPE) -
 
     if not books:
         rows = [
-            [InlineKeyboardButton("📢 گزارش به مدیر", callback_data=f"{PREFIX}:report")],
+            [InlineKeyboardButton("📢 گزارش به مدیر", callback_data=f"{PREFIX}:report", style="primary")],
             [InlineKeyboardButton("🔙 بازگشت به لیست درس‌ها", callback_data=f"{PREFIX}:back_subj")],
             [InlineKeyboardButton("🏠 بازگشت به منوی اصلی", callback_data="menu:main")],
         ]
@@ -118,7 +118,7 @@ async def _show_publishers(update: Update, context: ContextTypes.DEFAULT_TYPE) -
 
     rows = [[InlineKeyboardButton(f"📕 {b['publisher']}", callback_data=f"{PREFIX}:pub:{b['id']}")]
             for b in books]
-    rows.append([InlineKeyboardButton("📢 ناشر دیگه‌ای می‌خوام", callback_data=f"{PREFIX}:report")])
+    rows.append([InlineKeyboardButton("📢 ناشر دیگه‌ای می‌خوام", callback_data=f"{PREFIX}:report", style="primary")])
     await update.callback_query.edit_message_text(
         f"📚 {ud['subject']} {ud['grade']} — کدوم ناشر رو می‌خوای؟",
         reply_markup=with_back(rows, callback_data=f"{PREFIX}:back"),
