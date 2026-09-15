@@ -29,8 +29,8 @@ async def show_channels(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         lines.append(f"{i}. {ch['title']} — {ch['channel_id']}")
 
     rows = [
-        [InlineKeyboardButton("➕ افزودن کانال", callback_data="admin:add_channel")],
-        [InlineKeyboardButton("🗑 حذف کانال", callback_data="admin:remove_channel_menu")],
+        [InlineKeyboardButton("➕ افزودن کانال", callback_data="admin:add_channel", style="success")],
+        [InlineKeyboardButton("🗑 حذف کانال", callback_data="admin:remove_channel_menu", style="danger")],
         [InlineKeyboardButton("🔙 بازگشت", callback_data="admin:panel")],
     ]
     await query.edit_message_text("\n".join(lines), reply_markup=InlineKeyboardMarkup(rows))
@@ -75,7 +75,7 @@ async def show_remove_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     if not channels:
         await query.edit_message_text("هیچ کانالی برای حذف وجود نداره.")
         return
-    rows = [[InlineKeyboardButton(f"{i}. {ch['title']}", callback_data=f"admin:remove_channel:{ch['id']}")]
+    rows = [[InlineKeyboardButton(f"{i}. {ch['title']}", callback_data=f"admin:remove_channel:{ch['id']}", style="danger")]
             for i, ch in enumerate(channels, start=1)]
     rows.append([InlineKeyboardButton("🔙 بازگشت", callback_data="admin:channels")])
     await query.edit_message_text("🗑 حذف کانال\n\nکدوم کانال رو حذف کنم؟", reply_markup=InlineKeyboardMarkup(rows))
