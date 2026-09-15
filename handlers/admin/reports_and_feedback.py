@@ -53,10 +53,10 @@ async def view_book_request(update: Update, context: ContextTypes.DEFAULT_TYPE) 
         f"📅 تاریخ: {req['created_at'][:10]}"
     )
     rows = [
-        [InlineKeyboardButton("✅ اضافه شد", callback_data="admin:book_req_action:added")],
-        [InlineKeyboardButton("❌ وارد نمی‌شه", callback_data="admin:book_req_action:rejected")],
-        [InlineKeyboardButton("⏳ در دسترس نیست", callback_data="admin:book_req_action:unavailable")],
-        [InlineKeyboardButton("💬 پاسخ دلخواه", callback_data="admin:book_req_action:custom")],
+        [InlineKeyboardButton("✅ اضافه شد", callback_data="admin:book_req_action:added", style="success")],
+        [InlineKeyboardButton("❌ وارد نمی‌شه", callback_data="admin:book_req_action:rejected", style="danger")],
+        [InlineKeyboardButton("⏳ در دسترس نیست", callback_data="admin:book_req_action:unavailable", style="primary")],
+        [InlineKeyboardButton("💬 پاسخ دلخواه", callback_data="admin:book_req_action:custom", style="primary")],
         [InlineKeyboardButton("🔙 بازگشت", callback_data="admin:book_requests")],
     ]
     await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(rows))
