@@ -19,7 +19,7 @@ async def show_news_channel(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     else:
         text = f"📢 کانال اخبار\n━━━━━━━━━━━━━━━\nبرای اطلاع از آخرین اخبار و به‌روزرسانی‌ها عضو شو:"
         rows = [
-            [InlineKeyboardButton(f"📢 عضویت در {channel['title']}", url=channel["link"])],
+            [InlineKeyboardButton(f"📢 عضویت در {channel['title']}", url=channel["link"], style="primary")],
             [InlineKeyboardButton("🔙 بازگشت", callback_data="menu:main")],
         ]
     await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(rows))
