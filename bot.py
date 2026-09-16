@@ -91,6 +91,18 @@ async def weekly_leaderboard_reset_job(context: ContextTypes.DEFAULT_TYPE) -> No
     logger.info("امتیاز هفتگی همه‌ی کاربران ریست شد.")
 
 
+# ==================== ثبت خطاهای مدیریت‌نشده ====================
+
+async def global_error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """
+    هر خطای مدیریت‌نشده رو توی لاگ ثبت می‌کنه به‌جای اینکه بی‌صدا گم بشه.
+    PTB به‌طور پیش‌فرض همین‌طوری هم فقط همون یه آپدیت رو رد می‌کنه و ربات
+    کلاً نمی‌ایسته، ولی بدون این هندلر دلیل مشکلاتی مثل «فلان دکمه گاهی
+    کار نمی‌کنه» هیچ‌جا ثبت نمی‌شه و پیدا کردنش عملاً غیرممکنه.
+    """
+    logger.error("خطای مدیریت‌نشده در پردازش یک آپدیت:", exc_info=context.error)
+
+
 def main() -> None:
     if not BOT_TOKEN:
         raise RuntimeError(
@@ -179,6 +191,7 @@ def main() -> None:
         )
 
     logger.info("ربات در حال اجراست...")
+    application.add_error_handler(global_error_handler)
     application.run_polling(allowed_updates=Update.ALL_TYPES)
 
 
