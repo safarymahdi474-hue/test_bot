@@ -11,9 +11,15 @@ DB_PATH = Path(__file__).parent.parent / "bot_data.db"
 
 
 def _connect(db_path: str | Path = DB_PATH) -> sqlite3.Connection:
-    conn = sqlite3.connect(str(db_path))
+    # timeout بیشتر + حالت WAL: وقتی چند کاربر همزمان از ربات استفاده می‌کنن،
+    # SQLite پیش‌فرض (rollback journal) در نوشتن همزمان قفل می‌کنه و خطای
+    # "database is locked" می‌ده. WAL این مشکل رو تا حد زیادی حل می‌کنه چون
+    # خواندن و نوشتن همزمان رو با هم تداخل نمی‌ده.
+    conn = sqlite3.connect(str(db_path), timeout=30)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
+    conn.execute("PRAGMA journal_mode = WAL")
+    conn.execute("PRAGMA busy_timeout = 30000")
     return conn
 
 
