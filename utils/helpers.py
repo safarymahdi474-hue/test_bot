@@ -83,3 +83,19 @@ def parse_range_input(text: str, min_number: int, max_number: int) -> tuple[bool
     if start < min_number or end > max_number:
         return False, 0, 0, f"❌ این فصل فقط تست {min_number} تا {max_number} داره."
     return True, start, end, ""
+
+
+async def safe_edit_message_text(query, text: str, reply_markup=None, **kwargs) -> None:
+    """
+    مثل query.edit_message_text، ولی اگه محتوای جدید دقیقاً با پیام فعلی یکی
+    باشه (که تلگرام باهاش خطای «Message is not modified» می‌ده)، به‌جای
+    ترکیدن، فقط بی‌صدا رد می‌شه. این جلوی گیر کردن دکمه‌هایی رو می‌گیره که
+    گاهی (مثلاً با دوبار سریع لمس کردن، یا وقتی محتوا از آخرین بار عوض نشده)
+    قراره دقیقاً همون صفحه رو دوباره نشون بدن.
+    """
+    from telegram.error import BadRequest
+    try:
+        await query.edit_message_text(text, reply_markup=reply_markup, **kwargs)
+    except BadRequest as e:
+        if "Message is not modified" not in str(e):
+            raise
