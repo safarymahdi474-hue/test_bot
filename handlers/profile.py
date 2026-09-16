@@ -11,6 +11,7 @@ from telegram.ext import (
 from config import get_rank, MISTAKES_PAGE_SIZE, MISTAKES_MAX_PAGES
 from database import users as U, exams as E, content as C
 from database.misc import create_feedback, list_user_feedback
+from utils.helpers import safe_edit_message_text
 
 AWAITING_FEEDBACK = 0
 
@@ -34,7 +35,7 @@ async def show_profile(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         [InlineKeyboardButton("📩 انتقاد و پیشنهاد", callback_data="profile:feedback")],
         [InlineKeyboardButton("🔙 بازگشت", callback_data="menu:main")],
     ]
-    await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(rows))
+    await safe_edit_message_text(query, text, reply_markup=InlineKeyboardMarkup(rows))
 
 
 async def show_support(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -50,7 +51,7 @@ async def show_support(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         "📩 برای ارتباط با پشتیبانی، از بخش «📩 انتقاد و پیشنهاد» پیام بده."
     )
     rows = [[InlineKeyboardButton("🔙 بازگشت", callback_data="menu:profile")]]
-    await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(rows))
+    await safe_edit_message_text(query, text, reply_markup=InlineKeyboardMarkup(rows))
 
 
 def _format_feedback_history(items) -> str:
@@ -75,7 +76,7 @@ async def show_feedback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
     await query.answer()
     items = list_user_feedback(update.effective_user.id)
     rows = [[InlineKeyboardButton("🔙 بازگشت", callback_data="menu:profile")]]
-    await query.edit_message_text(_format_feedback_history(items), reply_markup=InlineKeyboardMarkup(rows))
+    await safe_edit_message_text(query, _format_feedback_history(items), reply_markup=InlineKeyboardMarkup(rows))
     return AWAITING_FEEDBACK
 
 
@@ -107,7 +108,7 @@ async def show_report_card(update: Update, context: ContextTypes.DEFAULT_TYPE) -
             [InlineKeyboardButton("🎯 شروع تست", callback_data="menu:practice", style="success")],
             [InlineKeyboardButton("🔙 بازگشت", callback_data="menu:main")],
         ]
-        await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(rows))
+        await safe_edit_message_text(query, text, reply_markup=InlineKeyboardMarkup(rows))
         return
 
     breakdown = U.get_subject_breakdown(user_id)
@@ -136,7 +137,7 @@ async def show_report_card(update: Update, context: ContextTypes.DEFAULT_TYPE) -
         [InlineKeyboardButton("📖 دیدن اشتباهاتم", callback_data="mistakes:page:1")],
         [InlineKeyboardButton("🔙 بازگشت", callback_data="menu:main")],
     ]
-    await query.edit_message_text("\n".join(lines), reply_markup=InlineKeyboardMarkup(rows))
+    await safe_edit_message_text(query, "\n".join(lines), reply_markup=InlineKeyboardMarkup(rows))
 
 
 def _format_mistakes_page(items, page: int, total_pages: int) -> str:
@@ -186,7 +187,7 @@ async def show_mistakes_page(update: Update, context: ContextTypes.DEFAULT_TYPE)
     if nav:
         rows.append(nav)
     rows.append([InlineKeyboardButton("🔙 بازگشت", callback_data="menu:report_card")])
-    await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(rows))
+    await safe_edit_message_text(query, text, reply_markup=InlineKeyboardMarkup(rows))
 
 
 async def view_mistake_image(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
