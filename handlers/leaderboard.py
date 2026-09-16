@@ -6,6 +6,7 @@ from telegram.ext import ContextTypes, CallbackQueryHandler
 
 from config import get_rank, POINTS_PER_INVITE
 from database import users as U
+from utils.helpers import safe_edit_message_text
 
 
 def _format_leaderboard(rows, title: str) -> str:
@@ -41,7 +42,7 @@ async def show_weekly(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         [InlineKeyboardButton("👥 دعوت دوستان", callback_data="lb:invite")],
         [InlineKeyboardButton("🔙 بازگشت", callback_data="menu:main")],
     ]
-    await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(rows_kb))
+    await safe_edit_message_text(query, text, reply_markup=InlineKeyboardMarkup(rows_kb))
 
 
 async def show_overall(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -60,7 +61,7 @@ async def show_overall(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         [InlineKeyboardButton("📊 لیدربورد هفتگی", callback_data="lb:weekly")],
         [InlineKeyboardButton("🔙 بازگشت", callback_data="menu:leaderboard")],
     ]
-    await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(rows_kb))
+    await safe_edit_message_text(query, text, reply_markup=InlineKeyboardMarkup(rows_kb))
 
 
 async def show_invite(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -79,7 +80,7 @@ async def show_invite(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         f"💰 امتیاز گرفته: {user['invited_count'] * POINTS_PER_INVITE:,}"
     )
     rows_kb = [[InlineKeyboardButton("🔙 بازگشت", callback_data="menu:leaderboard")]]
-    await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(rows_kb))
+    await safe_edit_message_text(query, text, reply_markup=InlineKeyboardMarkup(rows_kb))
 
 
 leaderboard_handlers = [
