@@ -18,7 +18,10 @@ def _markup_signature(markup):
     return tuple(sig)
 
 
-class MessageNotModified(Exception):
+from telegram.error import BadRequest
+
+
+class MessageNotModified(BadRequest):
     pass
 
 
